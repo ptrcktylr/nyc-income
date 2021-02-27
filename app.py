@@ -5,7 +5,7 @@ from bokeh.models import GeoJSONDataSource
 from bokeh.plotting import figure
 from bokeh.layouts import row, column
 
-with open('zip_codes.geojson') as file:
+with open('zip_codes.json') as file:
     geo_source = GeoJSONDataSource(geojson=file.read())
 
 TOOLS = "pan,wheel_zoom,reset,hover,save"
