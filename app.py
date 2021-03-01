@@ -78,10 +78,6 @@ with open('data/nyc_zip_codes.json') as json_file:
                 zipcode, zip_dfs[year]).strip()
 
         data['features'][i]['properties']['current_median_income'] = data['features'][i]['properties']['2011_median_income']
-        data['features'][i]['properties']['latlong'] = (
-            round(data['features'][i]['properties']['latitude'], 4), round(
-                data['features'][i]['properties']['longitude'], 4)
-        )
 
 geo_source = GeoJSONDataSource(geojson=json.dumps(data))
 
@@ -95,7 +91,7 @@ for year in range(2011, 2019):
     TOOLTIPS[str(year)] = [("Neighborhood", "@neighborhood"),
                            ("Zip Code", "@postalCode"),
                            ("Median Income", f"@{year}_median_income"),
-                           ("Lat, Long", "@latlong")]
+                           ("Latitude, Longitude", "$y, $x")]
 
 # Map
 p = figure(title="NYC Median Income Range",
