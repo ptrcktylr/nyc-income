@@ -1,5 +1,6 @@
 # NYC Median Income Data Visulization
 A map of New York City which shows the median household income from 2011 to 2018.
+
 Made in Python using Bokeh and Pandas. Deployed on Heroku.
 
 ## Try it
