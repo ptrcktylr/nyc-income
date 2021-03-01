@@ -138,3 +138,4 @@ p.legend.location = 'top_left'
 
 layout = row(p, slider)
 curdoc().add_root(layout)
+curdoc().title = "NYC Median Income"
