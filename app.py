@@ -102,8 +102,6 @@ p = figure(title="NYC Median Income Range",
            title_location="above",
            width=900,
            height=760,
-           x_axis_location=None,
-           y_axis_location=None,
            toolbar_location="above",
            tools=TOOLS, tooltips=TOOLTIPS['2011'])
 
