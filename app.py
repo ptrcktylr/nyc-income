@@ -1,7 +1,6 @@
 import pandas
 import json
 from bokeh.models import CustomJS, Slider
-from bokeh.io import show
 from bokeh.models import GeoJSONDataSource, CategoricalColorMapper
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import row
