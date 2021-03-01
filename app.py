@@ -9,12 +9,12 @@ from bokeh.layouts import row
 
 def get_medians(zipcode, zipcode_df):
     try:
-        median = int(zipcode_df[zipcode]['Returns Count'].iloc[0]/2)
+        median = int(zipcode_df[zipcode]['Number of Returns'].iloc[0]/2)
         for i in range(1, 7):
-            if zipcode_df[zipcode]['Returns Count'].iloc[i] < median:
-                median -= zipcode_df[zipcode]['Returns Count'].iloc[i]
+            if zipcode_df[zipcode]['Number of Returns'].iloc[i] < median:
+                median -= zipcode_df[zipcode]['Number of Returns'].iloc[i]
             else:
-                return zipcode_df[zipcode]['AGI Size'].iloc[i]
+                return zipcode_df[zipcode]['AGI'].iloc[i]
     except:
         return "No Information"
 
@@ -40,10 +40,15 @@ for idx, zipcodes in enumerate(neighborhood_raw["Zip Codes"]):
             zipcodes)] = neighborhood_raw["Neighborhood"][idx]
 
 # IRS Data
-raw_df = pandas.read_excel("income_data/11zp33ny.xlsx", header=None)
-irs_data = {'Zip Codes': raw_df.iloc[:][0],
-            'AGI Size': raw_df.iloc[:][1], 'Returns Count': raw_df.iloc[:][2]}
-df = pandas.DataFrame(irs_data)
+
+
+def get_income_data(year):
+    year = str(year)
+    df = pandas.read_csv(f"income_data/formatted_data/{year}_irs_data")
+    return df
+
+
+df = get_income_data(2011)
 
 # Map Data
 zip_dfs = {}
@@ -52,8 +57,8 @@ with open('nyc_zip_codes.json') as json_file:
     data = json.load(json_file)
     for i in range(len(data['features'])):
         zipcode = data['features'][i]['properties']['postalCode']
-        if int(zipcode) in df['Zip Codes']:
-            zip_dfs[zipcode] = df.loc[df['Zip Codes'] == int(zipcode)]
+        if int(zipcode) in df['Zip Code'].values:
+            zip_dfs[zipcode] = df.loc[df['Zip Code'].values == int(zipcode)]
         try:
             data['features'][i]['properties']['neighborhood'] = zip_codes_neighborhoods[zipcode]
         except:
@@ -99,4 +104,15 @@ for key, value in COLORMAP.items():
 
 p.legend.location = 'top_left'
 
-show(row(p))
+# # Slider
+# slider = Slider(title="Year", start=2011, end=2018, value=2011, step=1)
+# slider.on_change('value', update_plot)
+
+
+# def update_plot(attr, old, new):
+#     yr = slider.value
+#     new_data =
+
+
+layout = row(p)
+show(layout)
