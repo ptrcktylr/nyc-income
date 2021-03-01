@@ -2,12 +2,12 @@ import pandas
 import json
 from bokeh.models import CustomJS, Slider
 from bokeh.io import show
-from bokeh.models import GeoJSONDataSource
-from bokeh.plotting import figure
+from bokeh.models import GeoJSONDataSource, CategoricalColorMapper
+from bokeh.plotting import figure, curdoc
 from bokeh.layouts import row
 
 
-def get_medians(zipcode, zipcode_df):
+def get_medians(zipcode, zipcode_df):  # function to calculate median from dataframe
     try:
         median = int(zipcode_df[zipcode]['Number of Returns'].iloc[0]/2)
         for i in range(1, 7):
@@ -19,15 +19,19 @@ def get_medians(zipcode, zipcode_df):
         return "No Information"
 
 
-COLORMAP = {'$1 under $25,000': '#0868ac',
-            '$25,000 under $50,000': '#43a2ca',
-            '$50,000 under $75,000': '#7bccc4',
-            '$75,000 under $100,000': '#a8ddb5',
-            '$100,000 under $200,000': '#ccebc5',
-            '$200,000 or more': '#f0f9e8',
-            'No Information': '#7a807e', }
+# color mapping variables
+custom_colors = ['#0868ac', '#43a2ca',
+                 '#7bccc4', '#a8ddb5', '#ccebc5', '#f0f9e8', '#7a807e']
 
-neighborhood_raw = pandas.read_excel("neighborhoods.xlsx")
+color_factors = ['$1 under $25,000', '$25,000 under $50,000', '$50,000 under $75,000',
+                 '$75,000 under $100,000', '$100,000 under $200,000', '$200,000 or more', 'No Information']
+
+color_mapper = CategoricalColorMapper(
+    palette=custom_colors, factors=color_factors)
+
+
+# neighborhood name to zipcode data
+neighborhood_raw = pandas.read_excel("data/neighborhoods.xlsx")
 
 zip_codes_neighborhoods = {}
 for idx, zipcodes in enumerate(neighborhood_raw["Zip Codes"]):
@@ -39,48 +43,55 @@ for idx, zipcodes in enumerate(neighborhood_raw["Zip Codes"]):
         zip_codes_neighborhoods[str(
             zipcodes)] = neighborhood_raw["Neighborhood"][idx]
 
+
 # IRS Data
 
 
-def get_income_data(year):
+def get_income_data(year):  # function to get income data from csv
     year = str(year)
-    df = pandas.read_csv(f"income_data/formatted_data/{year}_irs_data")
+    df = pandas.read_csv(f"data/income_data/formatted_data/{year}_irs_data")
     return df
 
 
-df = get_income_data(2011)
+zip_dfs = {}
+all_income_data = {}
+
+for i in range(2011, 2019):
+    all_income_data[str(i)] = get_income_data(i)
+    zip_dfs[str(i)] = {}
 
 # Map Data
-zip_dfs = {}
 
-with open('nyc_zip_codes.json') as json_file:
+with open('data/nyc_zip_codes.json') as json_file:
     data = json.load(json_file)
     for i in range(len(data['features'])):
         zipcode = data['features'][i]['properties']['postalCode']
-        if int(zipcode) in df['Zip Code'].values:
-            zip_dfs[zipcode] = df.loc[df['Zip Code'].values == int(zipcode)]
-        try:
-            data['features'][i]['properties']['neighborhood'] = zip_codes_neighborhoods[zipcode]
-        except:
-            data['features'][i]['properties']['neighborhood'] = "None"
+        for year, df in all_income_data.items():
+            if int(zipcode) in df['Zip Code'].values:
+                zip_dfs[year][zipcode] = df.loc[df['Zip Code'].values ==
+                                                int(zipcode)]
+            try:
+                data['features'][i]['properties']['neighborhood'] = zip_codes_neighborhoods[zipcode]
+            except:
+                data['features'][i]['properties']['neighborhood'] = "None"
 
-        data['features'][i]['properties']['median_income'] = get_medians(
-            zipcode, zip_dfs).strip()
-        data['features'][i]['properties']['color'] = COLORMAP[data['features']
-                                                              [i]['properties']['median_income']]
+            data['features'][i]['properties'][f'{year}_median_income'] = get_medians(
+                zipcode, zip_dfs[year]).strip()
+
+        data['features'][i]['properties']['current_median_income'] = data['features'][i]['properties']['2011_median_income']
 
 geo_source = GeoJSONDataSource(geojson=json.dumps(data))
-
-
-# Slider
 
 
 # Tools/Tooltips
 TOOLS = ["pan", "box_zoom", "wheel_zoom", "tap", "hover", "reset"]
 
-TOOLTIPS = [("Neighborhood", "@neighborhood"),
-            ("Zip Code", "@postalCode"),
-            ("Median Income", "@median_income"), ]
+TOOLTIPS = {}
+
+for year in range(2011, 2019):
+    TOOLTIPS[str(year)] = [("Neighborhood", "@neighborhood"),
+                           ("Zip Code", "@postalCode"),
+                           ("Median Income", f"@{year}_median_income"), ]
 
 # Map
 p = figure(title="NYC Median Income Range",
@@ -90,29 +101,41 @@ p = figure(title="NYC Median Income Range",
            x_axis_location=None,
            y_axis_location=None,
            toolbar_location="above",
-           tools=TOOLS, tooltips=TOOLTIPS)
+           tools=TOOLS, tooltips=TOOLTIPS['2011'])
 
 p.grid.grid_line_color = None
 p.hover.point_policy = "follow_mouse"
-p.patches(xs="xs", ys="ys", color='color', line_color="black",
-          line_width=1, line_alpha=1, source=geo_source)
+r = p.patches(xs="xs", ys="ys",
+              fill_color={'field': 'current_median_income',
+                          'transform': color_mapper},
+              line_color="black", line_width=1, line_alpha=1, source=geo_source)
+
+# margin
 p.min_border_left = 100
 
+
+# Slider
+
+callback = CustomJS(args=dict(tt=p.hover, tooltip_opts=TOOLTIPS, renderer=r, source=geo_source), code="""
+    
+    tt[0].tooltips = tooltip_opts[cb_obj.value];
+
+    var data = source.data
+    data['current_median_income'] = data[`${cb_obj.value}_median_income`];
+    source.change.emit();
+
+""")
+
+slider = Slider(title='Year', start=2011, end=2018,
+                step=1, value=2011, margin=(5, 5, 5, 20))
+slider.js_on_change('value', callback)
+
 # Legend
-for key, value in COLORMAP.items():
-    p.square(legend_label=key, color=value)
+for hex_code, factor in zip(custom_colors, color_factors):
+    p.square(legend_label=factor, color=hex_code)
 
 p.legend.location = 'top_left'
 
-# # Slider
-# slider = Slider(title="Year", start=2011, end=2018, value=2011, step=1)
-# slider.on_change('value', update_plot)
 
-
-# def update_plot(attr, old, new):
-#     yr = slider.value
-#     new_data =
-
-
-layout = row(p)
-show(layout)
+layout = row(p, slider)
+curdoc().add_root(layout)
