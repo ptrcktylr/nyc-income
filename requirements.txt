@@ -12,3 +12,4 @@ PyYAML==5.4.1
 six==1.15.0
 tornado==6.1
 typing-extensions==3.7.4.3
+xlrd==2.0.1
