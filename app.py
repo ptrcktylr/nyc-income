@@ -134,6 +134,10 @@ for hex_code, factor in zip(custom_colors, color_factors):
 
 p.legend.location = 'top_left'
 
+# Default Selected Tools
+p.toolbar.active_drag = None
+p.toolbar.active_scroll = ['wheel_zoom']
+
 
 layout = row(p, slider)
 curdoc().add_root(layout)
