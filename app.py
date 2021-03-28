@@ -103,6 +103,11 @@ p = figure(title="NYC Median Income Range",
 
 p.grid.grid_line_color = None
 p.hover.point_policy = "follow_mouse"
+
+# Default Selected Tools
+p.toolbar.active_drag = None
+p.toolbar.active_scroll = ['wheel_zoom']
+
 r = p.patches(xs="xs", ys="ys",
               fill_color={'field': 'current_median_income',
                           'transform': color_mapper},
@@ -133,11 +138,6 @@ for hex_code, factor in zip(custom_colors, color_factors):
     p.square(legend_label=factor, color=hex_code)
 
 p.legend.location = 'top_left'
-
-# Default Selected Tools
-p.toolbar.active_drag = None
-p.toolbar.active_scroll = ['wheel_zoom']
-
 
 layout = row(p, slider)
 curdoc().add_root(layout)
