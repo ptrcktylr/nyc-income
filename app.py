@@ -103,6 +103,8 @@ p = figure(title="NYC Median Income Range",
            active_scroll='wheel_zoom', 
            tooltips=TOOLTIPS['2011'])
 
+p.toolbar.active_drag = None
+
 p.grid.grid_line_color = None
 p.hover.point_policy = "follow_mouse"
 
