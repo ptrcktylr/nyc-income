@@ -106,7 +106,7 @@ p.hover.point_policy = "follow_mouse"
 
 # Default Selected Tools
 p.toolbar.active_drag = None
-p.toolbar.active_scroll = ['wheel_zoom']
+p.toolbar.active_scroll = 'auto'
 
 r = p.patches(xs="xs", ys="ys",
               fill_color={'field': 'current_median_income',
