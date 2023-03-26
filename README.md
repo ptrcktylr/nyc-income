@@ -3,9 +3,6 @@ A map of New York City which shows the median household income from 2011 to 2018
 
 Made in Python using Bokeh and Pandas. Deployed on Heroku.
 
-## Try it
-https://nyc-income.herokuapp.com/app
-
 ## Data Sources
 * Income Data from IRS: https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-statistics-zip-code-data-soi
 
