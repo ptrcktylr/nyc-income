@@ -2,5 +2,11 @@ services:
   - type: web
     name: nyc-income
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    plan: free
+    buildCommand: |
+      python --version
+      pip install -r requirements.txt
     startCommand: ./start.sh
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
